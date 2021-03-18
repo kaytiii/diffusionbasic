@@ -1,0 +1,61 @@
+#!/bin/bash
+
+#############################################
+# Skull Stripping via BET
+# Kayti Keith - 3/9/21      
+#############################################
+
+printf "\033[1;94mPlease enter the path to your study folder:\033[0m  \n" 
+read folder_path
+cd $folder_path
+
+export folder_path=/Users/kayti/Desktop/Projects/NACC_test_run
+IDs=$folder_path/01_Protocols/IDs.txt
+analysis=$folder_path/03_Analysis
+SUBJ_IDs=$(cat $IDs)
+ 
+mkdir -p $analysis/03_TBSS
+mkdir -p $analysis/03_TBSS/Phase1
+mkdir -p $analysis/03_TBSS/Phase1/fa
+
+for i in $SUBJ_IDs ; do
+  cp $analysis/02_DTIFIT/${i}/dtifit_FA.nii $analysis/03_TBSS/Phase1/fa/${i}_dtifit_FA.nii
+done
+
+printf "\033[1;94mBeginning file setup for TBSS registration via TBSS 1.\033[0m  \n"
+cd $analysis/03_TBSS/Phase1/fa
+tbss_1_preproc *.nii
+printf "\033[1;32mTBSS 1 complete.\033[0m  \n"
+
+printf "\033[1;94mBeginning non-linear registration to standard space via TBSS 2.\033[0m  \n"
+tbss_2_reg -T
+printf "\033[1;32mTBSS 2 complete.\033[0m  \n"
+gunzip $analysis/03_TBSS/Phase1/fa/FA/*nii.gz
+
+printf "\033[1;94mCreating mean FA and skeleton via TBSS 3.\033[0m  \n"
+tbss_3_postreg -T
+printf "\033[1;32mTBSS 3 complete.\033[0m  \n"
+gunzip $analysis/03_TBSS/Phase1/fa/FA/*nii.gz
+
+printf "\033[1;94mProjecting individual subject data onto the mean FA skeleton via TBSS 4.\033[0m  \n"
+tbss_4_prestats 0.2
+printf "\033[1;32mTBSS 4 complete.\033[0m  \n"
+gunzip $analysis/03_TBSS/Phase1/fa/stats/*nii.gz
+
+mkdir -p $analysis/03_TBSS/Phase1/md
+
+for i in $SUBJ_IDs ; do
+  cp $analysis/02_DTIFIT/${i}/dtifit_MD.nii $analysis/03_TBSS/Phase1/md/${i}_dtifit_FA.nii
+done
+
+mv $analysis/03_TBSS/Phase1/fa $analysis/03_TBSS/Phase1/fa_dlt
+mv $analysis/03_TBSS/Phase1/fa_dlt/* $analysis/03_TBSS/Phase1
+rm -r $analysis/03_TBSS/Phase1/fa_dlt
+
+cd $analysis/03_TBSS/Phase1
+printf "\033[1;94mProcessing non-fa files via TBSS non-fa.\033[0m  \n"
+tbss_non_FA md
+printf "\033[1;32mTBSS non-fa complete.\033[0m  \n"
+
+mv $analysis/03_TBSS/Phase1/origdata $analysis/03_TBSS/Phase1/FA
+mv $analysis/03_TBSS/Phase1/md $analysis/03_TBSS/Phase1/FA
