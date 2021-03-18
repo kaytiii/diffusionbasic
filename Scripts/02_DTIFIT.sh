@@ -5,15 +5,15 @@
 # Kayti Keith - 3/9/21      
 #############################################
 
-printf "\033[1;94mPlease enter the path to your study folder:\033[0m  \n" 
-read folder_path
-cd $folder_path
+printf "\033[1;94mPlease enter the path to your study folder:\033[0m  \n"  #prompt for path input
+read folder_path #reads path input
+cd $folder_path #changes directory to path input
 
-IDs=$folder_path/01_Protocols/IDs.txt
-analysis=$folder_path/03_Analysis
-SUBJ_IDs=$(cat $IDs)
+IDs=$folder_path/01_Protocols/IDs.txt #sets ID text file as a variable
+analysis=$folder_path/03_Analysis #sets Analysis folder path as variable
+SUBJ_IDs=$(cat $IDs) #sets the list in the IDs.txt as an array
  
-mkdir -p $analysis/02_DTIFIT
+mkdir -p $analysis/02_DTIFIT #creates 02_DTIFIT folder
 
 printf "\033[1;94mBeginning tensor fitting via DTIFIT.\033[0m  \n"
 printf "\033[1;94mPlease enter BET threshold (0-1) you used in previous step: \033[0m"
